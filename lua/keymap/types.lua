@@ -1,11 +1,22 @@
 ---@class keymap.Config
 ---@field default_icon? string
----@field wk_fallback? boolean
+
+---@alias keymap.Mode
+---| "n"   -- Normal
+---| "v"   -- Visual
+---| "x"   -- Visual (block)
+---| "s"   -- Select
+---| "i"   -- Insert
+---| "t"   -- Terminal
+---| "o"   -- Operator-pending
+---| "c"   -- Command-line
+---| string -- Single mode character
+---| keymap.Mode[] -- Array of mode characters
 
 ---@class keymap.AddOpts
 ---@field key string
 ---@field action string|function
----@field mode? string|string[]
+---@field mode? keymap.Mode
 ---@field desc? string
 ---@field remap? boolean
 ---@field buffer? boolean|number
@@ -15,7 +26,7 @@
 ---@field vscode? string
 
 ---@class keymap.Util
----@field delete fun(key: string, mode?: string): nil
----@field send_key fun(key: string, mode?: string): nil
+---@field delete fun(key: string, mode?: keymap.Mode): nil
+---@field send_key fun(key: string, mode?: keymap.Mode): nil
 
 return {}

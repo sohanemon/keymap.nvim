@@ -1,7 +1,7 @@
 ---@class Keymap
 ---@field add fun(opts: Keymap.AddOpts): nil
----@field send_key fun(key: string, mode?: string): nil
----@field delete fun(key: string, mode?: string): nil
+---@field send_key fun(key: string, mode?: keymap.Mode): nil
+---@field delete fun(key: string, mode?: keymap.Mode): nil
 ---@field setup fun(opts?: Keymap.Config): nil
 ---@field config Keymap.Config
 ---@field util Keymap.Util

@@ -1,7 +1,7 @@
 ---@class keymap.AddOpts
 ---@field key string
 ---@field action string|function
----@field mode? string|string[]
+---@field mode? keymap.Mode
 ---@field desc? string
 ---@field remap? boolean
 ---@field buffer? boolean|number
