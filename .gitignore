@@ -6,3 +6,5 @@
 *.orig
 *.rej
 *.lua.bak
+node_modules/
+package-lock.json
