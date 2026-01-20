@@ -15,6 +15,7 @@ No more cluttering your config with `autocmd` boilerplate. Just declare where a 
 - **Buftype-specific mappings** — Keymaps for special buffer types (quickfix, terminal, etc.)
 - Simple API with optional which-key integration
 - Zero-dependency core (which-key optional)
+- Global `Keymap` table for convenience
 
 ## Installation
 
@@ -37,9 +38,21 @@ use("sohanemon/keymap.nvim")
 
 ```lua
 require("keymap").setup({
-  default_icon = "",    -- Icon for which-key display
-  wk_fallback = true,    -- Fallback to vim.keymap.set when which-key unavailable
+  default_icon = "",
+  wk_fallback = true,
 })
+```
+
+Or pass opts to lazy.nvim:
+
+```lua
+{
+  "sohanemon/keymap.nvim",
+  opts = {
+    default_icon = "",
+    wk_fallback = true,
+  },
+}
 ```
 
 ## Usage
@@ -49,85 +62,121 @@ Use either the module pattern or the global `Keymap` table:
 ```lua
 -- Module pattern (recommended)
 local keymap = require("keymap")
-keymap.remap({ ... })
+keymap.add({ ... })
 
 -- Global pattern
-Keymap.remap({ ... })
+Keymap.add({ ... })
+```
 
--- Global key mapping (applies everywhere)
-keymap.remap({
+### Global Key Mapping
+
+```lua
+keymap.add({
   key = "<leader>ff",
   action = ":Telescope find_files<CR>",
   desc = "Find files",
 })
+```
 
--- Buffer-local: only in the buffer where you call it
-keymap.remap({
+### Buffer-local Mapping
+
+Keymaps that live only in the current buffer:
+
+```lua
+keymap.add({
   key = "<leader>q",
   action = ":q<CR>",
   desc = "Quit",
   buffer = true,
 })
+```
 
--- Filetype-specific: only for Python files
-keymap.remap({
+### Filetype-specific Mapping
+
+Keymaps that activate only for specific file types:
+
+```lua
+keymap.add({
   key = "<leader>cc",
   action = ":Commentary<CR>",
   desc = "Comment",
   filetype = "python",
 })
+```
 
--- Multiple filetypes at once
-keymap.remap({
+Multiple filetypes:
+
+```lua
+keymap.add({
   key = "<leader>fm",
   action = ":Format<CR>",
   desc = "Format",
   filetype = { "python", "lua", "javascript" },
 })
+```
 
--- Buftype-specific: only in quickfix buffers
-keymap.remap({
+### Buftype-specific Mapping
+
+Keymaps for special buffer types:
+
+```lua
+keymap.add({
   key = "<leader>x",
   action = ":cclose<CR>",
   desc = "Close quickfix",
   buftype = "quickfix",
 })
+```
 
--- Multiple modes
-keymap.remap({
+### Multiple Modes
+
+```lua
+keymap.add({
   key = "<leader>cd",
   action = ":cd %:p:h<CR>",
   desc = "Change directory",
   mode = { "n", "v" },
 })
+```
 
--- With function action
-keymap.remap({
+### With Function Action
+
+```lua
+keymap.add({
   key = "<leader>pp",
   action = function()
     vim.notify("Project panel")
   end,
   desc = "Show project panel",
 })
+```
 
--- With VSCode support
-keymap.remap({
+### With VSCode Support
+
+```lua
+keymap.add({
   key = "<leader>rn",
   action = "editor.action.rename",
   desc = "Rename",
   vscode = "editor.action.rename",
 })
+```
 
--- Send key sequence
+### Send Key Sequence
+
+```lua
 keymap.send_key("<Esc>", "i")
+```
 
--- Delete a keymap
-keymap.delete_keymap("<leader>x", "n")
+### Delete a Keymap
+
+```lua
+keymap.delete("<leader>x", "n")
 ```
 
 ## API
 
-### `keymap.remap(opts)`
+### `keymap.add(opts)`
 
 Create a key mapping.
 
@@ -135,12 +184,12 @@ Create a key mapping.
 |--------|------|-------------|
 | `key` | `string` | Key sequence (required) |
 | `action` | `string\|function` | Command or function (required) |
-| `mode` | `string\|string[]` | Mode(s): "n", "i", "v", "x", "s", "o", "t" (default: "n") |
-| `desc` | `string` | Description for which-key |
-| `remap` | `boolean` | Allow remapping |
 | `buffer` | `boolean\|number` | Buffer-local mapping |
 | `filetype` | `string\|string[]` | Filetype pattern(s) |
 | `buftype` | `string\|string[]` | Buftype pattern(s) |
+| `mode` | `string\|string[]` | Mode(s): "n", "i", "v", "x", "s", "o", "t" (default: "n") |
+| `desc` | `string` | Description for which-key |
+| `remap` | `boolean` | Allow remapping |
 | `icon` | `string` | Icon for which-key |
 | `vscode` | `string` | VSCode command |
 
@@ -148,7 +197,7 @@ Create a key mapping.
 
 Send key sequence to Vim.
 
-### `keymap.delete_keymap(key, mode)`
+### `keymap.delete(key, mode)`
 
 Delete an existing key mapping.
 

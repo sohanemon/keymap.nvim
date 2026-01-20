@@ -140,7 +140,7 @@ describe("keymap.util", function()
     assert(feedkeys_mode == "n", "default mode should be n")
   end)
 
-  it("should call vim.keymap.del in delete_keymap", function()
+  it("should call vim.keymap.del in delete", function()
     local del_called = false
     local del_args = {}
 
@@ -150,18 +150,30 @@ describe("keymap.util", function()
       del_args = { mode, key }
     end
 
-    util.delete_keymap("<leader>f", "n")
+    util.delete("<leader>f", "n")
     assert(del_called == true, "keymap.del should be called")
     assert(del_args[1] == "n", "mode should be n")
     assert(del_args[2] == "<leader>f", "key should be <leader>f")
   end)
+
+  it("should use default mode 'n' in delete when mode is nil", function()
+    local del_args = {}
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.del = function(mode, key)
+      del_args = { mode, key }
+    end
+
+    util.delete("<leader>x")
+    assert(del_args[1] == "n", "default mode should be n")
+  end)
 end)
 
 -- ============================================
--- REMAP TESTS
+-- ADD SUBMODULE TESTS
 -- ============================================
-describe("keymap.remap", function()
-  local remap = require("keymap.remap")
+describe("keymap.add (submodule)", function()
+  local add = require("keymap.add")
   local config = require("keymap.config")
 
   before_each(function()
@@ -177,18 +189,16 @@ describe("keymap.remap", function()
   it("should delete existing keymap before creating new one", function()
     local delete_called = false
     local util = require("keymap.util")
-    util.delete_keymap = function()
+    util.delete = function()
       delete_called = true
     end
-    package.loaded["keymap.remap"] = nil
-    remap = require("keymap.remap")
 
-    remap.remap({
+    add({
       key = "<leader>t",
       action = ":Test<CR>",
     })
 
-    assert(delete_called == true, "delete_keymap should be called")
+    assert(delete_called == true, "delete should be called")
   end)
 
   it("should use default mode 'n' when mode is not provided", function()
@@ -199,7 +209,7 @@ describe("keymap.remap", function()
       set_args = { mode, key, cmd, opts }
     end
 
-    remap.remap({
+    add({
       key = "<leader>f",
       action = ":Files<CR>",
     })
@@ -207,7 +217,7 @@ describe("keymap.remap", function()
     assert(set_args[1] == "n", "mode should be n")
   end)
 
-  it("should use custom mode when provided", function()
+  it("should use custom mode when provided as string", function()
     local set_args = {}
 
     _G.vim.keymap = _G.vim.keymap or {}
@@ -215,7 +225,24 @@ describe("keymap.remap", function()
       set_args = { mode, key, cmd, opts }
     end
 
-    remap.remap({
+    add({
+      key = "<leader>x",
+      action = ":X<CR>",
+      mode = "v",
+    })
+
+    assert(set_args[1] == "v", "mode should be v")
+  end)
+
+  it("should use custom mode when provided as table", function()
+    local set_args = {}
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function(mode, key, cmd, opts)
+      set_args = { mode, key, cmd, opts }
+    end
+
+    add({
       key = "<leader>x",
       action = ":X<CR>",
       mode = { "n", "v" },
@@ -233,7 +260,7 @@ describe("keymap.remap", function()
       set_opts = opts
     end
 
-    remap.remap({
+    add({
       key = "<leader>p",
       action = ":Project<CR>",
       desc = "Open project",
@@ -250,13 +277,30 @@ describe("keymap.remap", function()
       set_opts = opts
     end
 
-    remap.remap({
+    add({
       key = "<leader>q",
       action = ":q<CR>",
       buffer = true,
     })
 
     assert(set_opts.buffer == true, "buffer should be true")
+  end)
+
+  it("should pass remap option to keymap.set", function()
+    local set_opts = {}
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function(mode, key, cmd, opts)
+      set_opts = opts
+    end
+
+    add({
+      key = "<leader>r",
+      action = ":Rebind<CR>",
+      remap = true,
+    })
+
+    assert(set_opts.remap == true, "remap should be true")
   end)
 
   it("should handle filetype as string", function()
@@ -269,7 +313,7 @@ describe("keymap.remap", function()
       end
     end
 
-    remap.remap({
+    add({
       key = "<leader>r",
       action = ":Run<CR>",
       desc = "Run",
@@ -289,7 +333,7 @@ describe("keymap.remap", function()
       end
     end
 
-    remap.remap({
+    add({
       key = "<leader>f",
       action = ":Format<CR>",
       desc = "Format",
@@ -309,7 +353,7 @@ describe("keymap.remap", function()
       end
     end
 
-    remap.remap({
+    add({
       key = "<leader>s",
       action = ":Save<CR>",
       desc = "Save",
@@ -317,6 +361,160 @@ describe("keymap.remap", function()
     })
 
     assert(autocmd_created == true, "BufEnter autocmd should be created")
+  end)
+
+  it("should handle buftype as table", function()
+    local autocmd_count = 0
+
+    _G.vim.api = _G.vim.api or {}
+    _G.vim.api.nvim_create_autocmd = function(event, opts)
+      if event == "BufEnter" then
+        autocmd_count = autocmd_count + 1
+      end
+    end
+
+    add({
+      key = "<leader>w",
+      action = ":Write<CR>",
+      desc = "Write",
+      buftype = { "quickfix", "terminal" },
+    })
+
+    assert(autocmd_count == 2, "should create autocmd for each buftype")
+  end)
+
+  it("should use config.default_icon when icon is not provided", function()
+    local wk_called = false
+    local wk_icon = nil
+
+    package.loaded["which-key"] = {
+      add = function(args)
+        wk_called = true
+        wk_icon = args[1].icon
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>g",
+      action = ":Go<CR>",
+      desc = "Go to",
+    })
+
+    assert(wk_called == true, "which-key.add should be called")
+    assert(wk_icon == "", "should use default_icon from config")
+  end)
+
+  it("should use custom icon when provided", function()
+    local wk_called = false
+    local wk_icon = nil
+
+    package.loaded["which-key"] = {
+      add = function(args)
+        wk_called = true
+        wk_icon = args[1].icon
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>h",
+      action = ":Help<CR>",
+      desc = "Help",
+      icon = "",
+    })
+
+    assert(wk_called == true, "which-key.add should be called")
+    assert(wk_icon == "", "should use custom icon")
+  end)
+
+  it("should pass remap option to which-key", function()
+    local wk_opts = nil
+
+    package.loaded["which-key"] = {
+      add = function(args)
+        wk_opts = args[1]
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>m",
+      action = ":Map<CR>",
+      desc = "Map",
+      remap = true,
+    })
+
+    assert(wk_opts.remap == true, "remap should be passed to which-key")
+  end)
+
+  it("should use function action", function()
+    local func_called = false
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function(mode, key, cmd, opts)
+      if type(cmd) == "function" then
+        func_called = true
+      end
+    end
+
+    -- Clear which-key so function actions go to keymap.set
+    package.loaded["which-key"] = nil
+
+    add({
+      key = "<leader>p",
+      action = function()
+        return "test"
+      end,
+      desc = "Function action",
+    })
+
+    assert(func_called == true, "function action should be passed to keymap.set")
+  end)
+end)
+
+-- ============================================
+-- MAIN MODULE TESTS
+-- ============================================
+describe("keymap (main module)", function()
+  it("should expose add function", function()
+    local keymap = require("keymap")
+    assert(type(keymap.add) == "function", "keymap.add should be a function")
+  end)
+
+  it("should expose send_key function", function()
+    local keymap = require("keymap")
+    assert(type(keymap.send_key) == "function", "keymap.send_key should be a function")
+  end)
+
+  it("should expose delete function", function()
+    local keymap = require("keymap")
+    assert(type(keymap.delete) == "function", "keymap.delete should be a function")
+  end)
+
+  it("should expose setup function", function()
+    local keymap = require("keymap")
+    assert(type(keymap.setup) == "function", "keymap.setup should be a function")
+  end)
+
+  it("should expose config table", function()
+    local keymap = require("keymap")
+    assert(type(keymap.config) == "table", "keymap.config should be a table")
+    assert(type(keymap.config.default_icon) == "string", "config should have default_icon")
+    assert(type(keymap.config.wk_fallback) == "boolean", "config should have wk_fallback")
+  end)
+
+  it("should expose util table", function()
+    local keymap = require("keymap")
+    assert(type(keymap.util) == "table", "keymap.util should be a table")
+    assert(type(keymap.util.delete) == "function", "util should have delete")
+    assert(type(keymap.util.send_key) == "function", "util should have send_key")
   end)
 end)
 
@@ -326,18 +524,51 @@ end)
 describe("Global Keymap", function()
   it("should expose Keymap global table", function()
     assert(_G.Keymap ~= nil, "Keymap should be a global table")
-    assert(type(_G.Keymap.remap) == "function", "Keymap.remap should be a function")
+    assert(type(_G.Keymap.add) == "function", "Keymap.add should be a function")
     assert(type(_G.Keymap.setup) == "function", "Keymap.setup should be a function")
     assert(type(_G.Keymap.send_key) == "function", "Keymap.send_key should be a function")
-    assert(type(_G.Keymap.delete_keymap) == "function", "Keymap.delete_keymap should be a function")
+    assert(type(_G.Keymap.delete) == "function", "Keymap.delete should be a function")
   end)
 
   it("should have same functions as module", function()
     local keymap = require("keymap")
-    assert(_G.Keymap.remap == keymap.remap, "Keymap.remap should equal require('keymap').remap")
+    assert(_G.Keymap.add == keymap.add, "Keymap.add should equal require('keymap').add")
     assert(_G.Keymap.setup == keymap.setup, "Keymap.setup should equal require('keymap').setup")
     assert(_G.Keymap.send_key == keymap.send_key, "Keymap.send_key should equal require('keymap').send_key")
-    assert(_G.Keymap.delete_keymap == keymap.delete_keymap, "Keymap.delete_keymap should equal require('keymap').delete_keymap")
+    assert(_G.Keymap.delete == keymap.delete, "Keymap.delete should equal require('keymap').delete")
+  end)
+
+  it("should have same config as module", function()
+    local keymap = require("keymap")
+    assert(_G.Keymap.config == keymap.config, "Keymap.config should equal require('keymap').config")
+  end)
+
+  it("should have same util as module", function()
+    local keymap = require("keymap")
+    assert(_G.Keymap.util == keymap.util, "Keymap.util should equal require('keymap').util")
+  end)
+end)
+
+-- ============================================
+-- LAZY LOADING TESTS
+-- ============================================
+describe("Lazy loading", function()
+  it("should lazy load add submodule", function()
+    package.loaded["keymap.add"] = nil
+    local keymap = require("keymap")
+    -- Access add for the first time
+    local add_fn = keymap.add
+    -- Should now be cached
+    assert(keymap.add == add_fn, "add should be cached after first access")
+  end)
+
+  it("should lazy load util submodule", function()
+    package.loaded["keymap.util"] = nil
+    local keymap = require("keymap")
+    -- Access util for the first time
+    local util_tbl = keymap.util
+    -- Should now be cached
+    assert(keymap.util == util_tbl, "util should be cached after first access")
   end)
 end)
 
