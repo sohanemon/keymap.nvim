@@ -6,7 +6,9 @@ local M = {
 function M.setup(opts)
   opts = opts or {}
   M.default_icon = opts.default_icon or M.default_icon
-  M.wk_fallback = opts.wk_fallback ~= nil and opts.wk_fallback or M.wk_fallback
+  if opts.wk_fallback ~= nil then
+    M.wk_fallback = opts.wk_fallback
+  end
 end
 
 return M
