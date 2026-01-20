@@ -35,43 +35,18 @@ function M.add(opts)
   local function add_keymap(bufnr)
     local wk_status, wk = pcall(require, "which-key")
     local config = require("keymap.config")
-    if wk_status then
-      if command then
-        wk.add({
-          {
-            key,
-            command,
-            desc = desc,
-            mode = mode,
-            remap = remap,
-            buffer = bufnr,
-            icon = icon or config.default_icon,
-          },
-        })
-      else
-        wk.add({
-          {
-            key,
-            group = desc,
-            mode = mode,
-            buffer = bufnr,
-            icon = icon or config.default_icon,
-          },
-        })
-      end
-    elseif config.wk_fallback then
-      if command then
-        vim.keymap.set(mode, key, command, {
+    if wk_status and wk and wk.add then
+      wk.add({
+        {
+          key,
+          command or action,
           desc = desc,
+          mode = mode,
           remap = remap,
           buffer = bufnr,
-        })
-      else
-        vim.keymap.set(mode, key, action, {
-          desc = desc,
-          buffer = bufnr,
-        })
-      end
+          icon = icon or config.default_icon,
+        },
+      })
     else
       vim.keymap.set(mode, key, action or command, {
         desc = desc,

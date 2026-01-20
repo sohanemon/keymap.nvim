@@ -66,12 +66,10 @@ describe("keymap.config", function()
 
   before_each(function()
     config.default_icon = ""
-    config.wk_fallback = true
   end)
 
   it("should have correct default values", function()
     assert(config.default_icon == "", "default_icon should be ")
-    assert(config.wk_fallback == true, "wk_fallback should be true")
   end)
 
   it("should override default_icon when provided", function()
@@ -79,23 +77,15 @@ describe("keymap.config", function()
     assert(config.default_icon == "→", "default_icon should be →")
   end)
 
-  it("should override wk_fallback when provided", function()
-    config.setup({ wk_fallback = false })
-    assert(config.wk_fallback == false, "wk_fallback should be false")
-  end)
-
   it("should preserve values when opts is nil", function()
     config.default_icon = "X"
-    config.wk_fallback = false
     config.setup(nil)
     assert(config.default_icon == "X", "default_icon should be X")
-    assert(config.wk_fallback == false, "wk_fallback should be false")
   end)
 
   it("should handle partial updates", function()
     config.setup({ default_icon = "★" })
     assert(config.default_icon == "★", "default_icon should be ★")
-    assert(config.wk_fallback == true, "wk_fallback should still be true")
   end)
 end)
 
@@ -178,12 +168,12 @@ describe("keymap.add (submodule)", function()
 
   before_each(function()
     config.default_icon = ""
-    config.wk_fallback = true
 
     _G.vim.api = _G.vim.api or {}
     _G.vim.api.nvim_create_autocmd = function() end
     _G.vim.keymap = _G.vim.keymap or {}
     _G.vim.keymap.set = function() end
+    package.loaded["which-key"] = nil
   end)
 
   it("should delete existing keymap before creating new one", function()
@@ -455,12 +445,12 @@ describe("keymap.add (submodule)", function()
   end)
 
   it("should use function action", function()
-    local func_called = false
+    local func_received = false
 
     _G.vim.keymap = _G.vim.keymap or {}
     _G.vim.keymap.set = function(mode, key, cmd, opts)
       if type(cmd) == "function" then
-        func_called = true
+        func_received = true
       end
     end
 
@@ -475,7 +465,47 @@ describe("keymap.add (submodule)", function()
       desc = "Function action",
     })
 
-    assert(func_called == true, "function action should be passed to keymap.set")
+    assert(func_received == true, "function action should be passed to keymap.set")
+  end)
+
+  it("should fall back to vim.keymap.set when which-key not available", function()
+    local keymap_set_called = false
+
+    package.loaded["which-key"] = nil
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function()
+      keymap_set_called = true
+    end
+
+    add({
+      key = "<leader>t",
+      action = ":Test<CR>",
+      desc = "Test",
+    })
+
+    assert(keymap_set_called == true, "should fall back to vim.keymap.set")
+  end)
+
+  it("should use which-key when available", function()
+    local wk_called = false
+
+    package.loaded["which-key"] = {
+      add = function()
+        wk_called = true
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>k",
+      action = ":Test<CR>",
+      desc = "Test",
+    })
+
+    assert(wk_called == true, "should use which-key when available")
   end)
 end)
 
@@ -507,7 +537,6 @@ describe("keymap (main module)", function()
     local keymap = require("keymap")
     assert(type(keymap.config) == "table", "keymap.config should be a table")
     assert(type(keymap.config.default_icon) == "string", "config should have default_icon")
-    assert(type(keymap.config.wk_fallback) == "boolean", "config should have wk_fallback")
   end)
 
   it("should expose util table", function()

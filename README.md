@@ -21,9 +21,11 @@ No more cluttering your config with `autocmd` boilerplate. Just declare where a 
 
 ### [lazy.nvim](https://github.com/folke/lazy.nvim)
 
+
 ```lua
 {
   "sohanemon/keymap.nvim",
+  dependencies = { "folke/which-key.nvim" -- optional },
   opts = {},
 }
 ```
@@ -38,8 +40,7 @@ use("sohanemon/keymap.nvim")
 
 ```lua
 require("keymap").setup({
-  default_icon = "",
-  wk_fallback = true,
+  default_icon = "",  -- Icon for which-key display (only used if which-key is available)
 })
 ```
 
@@ -50,7 +51,6 @@ Or pass opts to lazy.nvim:
   "sohanemon/keymap.nvim",
   opts = {
     default_icon = "",
-    wk_fallback = true,
   },
 }
 ```
@@ -190,7 +190,7 @@ Create a key mapping.
 | `mode` | `string\|string[]` | Mode(s): "n", "i", "v", "x", "s", "o", "t" (default: "n") |
 | `desc` | `string` | Description for which-key |
 | `remap` | `boolean` | Allow remapping |
-| `icon` | `string` | Icon for which-key |
+| `icon` | `string` | Icon for which-key (only used if which-key is available) |
 | `vscode` | `string` | VSCode command |
 
 ### `keymap.send_key(key, mode)`
