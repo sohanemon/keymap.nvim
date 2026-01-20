@@ -1,6 +1,6 @@
 ---@class keymap.AddOpts
 ---@field key string
----@field action string|function
+---@field action? string|function
 ---@field mode? keymap.Mode
 ---@field desc? string
 ---@field remap? boolean
@@ -13,6 +13,7 @@
 local M = {}
 
 --- Create a key mapping with optional buffer/filetype/buftype scoping.
+--- If action is nil, creates a which-key group with desc as the group name.
 ---@param opts keymap.AddOpts
 function M.add(opts)
   local key = opts.key
@@ -36,17 +37,29 @@ function M.add(opts)
     local wk_status, wk = pcall(require, "which-key")
     local config = require("keymap.config")
     if wk_status and wk and wk.add then
-      wk.add({
-        {
-          key,
-          command or action,
-          desc = desc,
-          mode = mode,
-          remap = remap,
-          buffer = bufnr,
-          icon = icon or config.default_icon,
-        },
-      })
+      if command then
+        wk.add({
+          {
+            key,
+            command,
+            desc = desc,
+            mode = mode,
+            remap = remap,
+            buffer = bufnr,
+            icon = icon or config.default_icon,
+          },
+        })
+      else
+        wk.add({
+          {
+            key,
+            group = desc,
+            mode = mode,
+            buffer = bufnr,
+            icon = icon or config.default_icon,
+          },
+        })
+      end
     else
       vim.keymap.set(mode, key, action or command, {
         desc = desc,

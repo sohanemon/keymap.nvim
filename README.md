@@ -139,6 +139,17 @@ keymap.add({
 })
 ```
 
+### With VSCode Support
+
+```lua
+keymap.add({
+  key = "<leader>rn",
+  action = "editor.action.rename",
+  desc = "Rename",
+  vscode = "editor.action.rename",
+})
+```
+
 ### With Function Action
 
 ```lua
@@ -151,14 +162,28 @@ keymap.add({
 })
 ```
 
-### With VSCode Support
+### Create Which-key Group
+
+When `action` is omitted, creates a which-key group with `desc` as the group name:
 
 ```lua
+-- Group leader (no action, just a label)
 keymap.add({
-  key = "<leader>rn",
-  action = "editor.action.rename",
-  desc = "Rename",
-  vscode = "editor.action.rename",
+  key = "<leader>f",
+  desc = "Telescope files",
+})
+
+-- Actual mappings under the group
+keymap.add({
+  key = "<leader>ff",
+  action = ":Telescope find_files",
+  desc = "Find files",
+})
+
+keymap.add({
+  key = "<leader>fb",
+  action = ":Telescope buffers",
+  desc = "Buffers",
 })
 ```
 
@@ -178,17 +203,17 @@ keymap.delete("<leader>x", "n")
 
 ### `keymap.add(opts)`
 
-Create a key mapping.
+Create a key mapping. If `action` is omitted, creates a which-key group with `desc` as the group name.
 
 | Option | Type | Description |
 |--------|------|-------------|
 | `key` | `string` | Key sequence (required) |
-| `action` | `string\|function` | Command or function (required) |
+| `action` | `string\|function` | Command or function (optional - omit to create a group) |
 | `buffer` | `boolean\|number` | Buffer-local mapping |
 | `filetype` | `string\|string[]` | Filetype pattern(s) |
 | `buftype` | `string\|string[]` | Buftype pattern(s) |
 | `mode` | `string\|string[]` | Mode(s): "n", "i", "v", "x", "s", "o", "t" (default: "n") |
-| `desc` | `string` | Description for which-key |
+| `desc` | `string` | Description for which-key, or group name if `action` is omitted |
 | `remap` | `boolean` | Allow remapping |
 | `icon` | `string` | Icon for which-key (only used if which-key is available) |
 | `vscode` | `string` | VSCode command |

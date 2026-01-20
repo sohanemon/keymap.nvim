@@ -15,7 +15,7 @@
 
 ---@class keymap.AddOpts
 ---@field key string
----@field action string|function
+---@field action? string|function -- Omit to create a which-key group with desc as group name
 ---@field mode? keymap.Mode
 ---@field desc? string
 ---@field remap? boolean

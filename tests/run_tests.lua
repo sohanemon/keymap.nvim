@@ -507,6 +507,71 @@ describe("keymap.add (submodule)", function()
 
     assert(wk_called == true, "should use which-key when available")
   end)
+
+  it("should create which-key group when action is nil", function()
+    local wk_args = nil
+
+    package.loaded["which-key"] = {
+      add = function(args)
+        wk_args = args[1]
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>f",
+      desc = "Find files",
+    })
+
+    assert(wk_args ~= nil, "which-key.add should be called")
+    assert(wk_args.group == "Find files", "should set group to desc")
+    assert(wk_args.command == nil, "should not have command when creating group")
+  end)
+
+  it("should create which-key group with custom icon", function()
+    local wk_args = nil
+
+    package.loaded["which-key"] = {
+      add = function(args)
+        wk_args = args[1]
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>p",
+      desc = "Project",
+      icon = "",
+    })
+
+    assert(wk_args.group == "Project", "should set group to desc")
+    assert(wk_args.icon == "", "should use custom icon")
+  end)
+
+  it("should use vim.keymap.set when action is nil and which-key not available", function()
+    local keymap_set_called = false
+    local keymap_args = nil
+
+    package.loaded["which-key"] = nil
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function(mode, key, cmd, opts)
+      keymap_set_called = true
+      keymap_args = { mode, key, cmd, opts }
+    end
+
+    add({
+      key = "<leader>g",
+      desc = "Git",
+    })
+
+    assert(keymap_set_called == true, "should call vim.keymap.set")
+    assert(keymap_args[3] == nil, "command should be nil")
+  end)
 end)
 
 -- ============================================
