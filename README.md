@@ -1,13 +1,19 @@
 # keymap.nvim
 
-A lightweight Neovim plugin for creating key mappings with optional which-key integration.
+A lightweight Neovim plugin for creating key mappings with buffer, filetype, and buftype scoping.
+
+## Why keymap.nvim?
+
+Most keymapping plugins give you global mappings. This plugin makes it **trivial to create context-aware keymaps** that only exist where you need them — per buffer, per filetype, or per buftype.
+
+No more cluttering your config with `autocmd` boilerplate. Just declare where a keymap should apply.
 
 ## Features
 
-- Simple API for creating key mappings
-- Which-key integration with auto-fallback to native `vim.keymap.set`
-- Support for buffer-local, filetype-specific, and buftype-specific mappings
-- VSCode extension support
+- **Buffer-local mappings** — Keymaps that live only in the current buffer
+- **Filetype-specific mappings** — Keymaps that activate only for specific file types
+- **Buftype-specific mappings** — Keymaps for special buffer types (quickfix, terminal, etc.)
+- Simple API with optional which-key integration
 - Zero-dependency core (which-key optional)
 
 ## Installation
@@ -18,7 +24,7 @@ A lightweight Neovim plugin for creating key mappings with optional which-key in
 {
   "sohanemon/keymap.nvim",
   opts = {},
-},
+}
 ```
 
 ### [packer.nvim](https://github.com/wbthomason/packer.nvim)
@@ -41,19 +47,43 @@ require("keymap").setup({
 ```lua
 local keymap = require("keymap")
 
--- Basic key mapping
+-- Global key mapping (applies everywhere)
 keymap.remap({
   key = "<leader>ff",
   action = ":Telescope find_files<CR>",
   desc = "Find files",
 })
 
--- With which-key icon
+-- Buffer-local: only in the buffer where you call it
 keymap.remap({
-  key = "<leader>fb",
-  action = ":Telescope buffers<CR>",
-  desc = "Buffers",
-  icon = "",
+  key = "<leader>q",
+  action = ":q<CR>",
+  desc = "Quit",
+  buffer = true,
+})
+
+-- Filetype-specific: only for Python files
+keymap.remap({
+  key = "<leader>cc",
+  action = ":Commentary<CR>",
+  desc = "Comment",
+  filetype = "python",
+})
+
+-- Multiple filetypes at once
+keymap.remap({
+  key = "<leader>fm",
+  action = ":Format<CR>",
+  desc = "Format",
+  filetype = { "python", "lua", "javascript" },
+})
+
+-- Buftype-specific: only in quickfix buffers
+keymap.remap({
+  key = "<leader>x",
+  action = ":cclose<CR>",
+  desc = "Close quickfix",
+  buftype = "quickfix",
 })
 
 -- Multiple modes
@@ -62,22 +92,6 @@ keymap.remap({
   action = ":cd %:p:h<CR>",
   desc = "Change directory",
   mode = { "n", "v" },
-})
-
--- Buffer-local mapping
-keymap.remap({
-  key = "<leader>q",
-  action = ":q<CR>",
-  desc = "Quit",
-  buffer = true,
-})
-
--- Filetype-specific mapping
-keymap.remap({
-  key = "<leader>cc",
-  action = ":Commentary<CR>",
-  desc = "Comment",
-  filetype = "python",
 })
 
 -- With function action

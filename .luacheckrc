@@ -1,2 +1,0 @@
--- luacheck: globals vim
--- luacheck: ignore 211
