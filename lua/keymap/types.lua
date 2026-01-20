@@ -1,5 +1,9 @@
+---@class keymap.Config.Icon
+---@field default? string -- Icon for keymaps
+---@field group? string -- Icon for groups
+
 ---@class keymap.Config
----@field default_icon? string
+---@field icon? string|keymap.Config.Icon
 
 ---@alias keymap.Mode
 ---| "n"   -- Normal

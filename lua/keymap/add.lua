@@ -46,7 +46,7 @@ function M.add(opts)
             mode = mode,
             remap = remap,
             buffer = bufnr,
-            icon = icon or config.default_icon,
+            icon = icon or config.get_icon(),
           },
         })
       else
@@ -56,7 +56,7 @@ function M.add(opts)
             group = desc,
             mode = mode,
             buffer = bufnr,
-            icon = icon or config.default_icon,
+            icon = icon or config.get_group_icon(),
           },
         })
       end

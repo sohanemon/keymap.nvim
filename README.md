@@ -25,7 +25,7 @@ No more cluttering your config with `autocmd` boilerplate. Just declare where a 
 ```lua
 {
   "sohanemon/keymap.nvim",
-  dependencies = { "folke/which-key.nvim" -- optional },
+  dependencies = { "folke/which-key.nvim"  }, -- optional
   opts = {},
 }
 ```
@@ -38,9 +38,22 @@ use("sohanemon/keymap.nvim")
 
 ## Configuration
 
+**String (same icon for all):**
+
 ```lua
 require("keymap").setup({
-  default_icon = "",  -- Icon for which-key display (only used if which-key is available)
+  icon = "",  -- Icon for which-key (keymaps and groups)
+})
+```
+
+**Table (different icons for keymaps and groups):**
+
+```lua
+require("keymap").setup({
+  icon = {
+    default = "",   -- Icon for keymaps
+    group = "",     -- Icon for groups
+  },
 })
 ```
 
@@ -50,7 +63,10 @@ Or pass opts to lazy.nvim:
 {
   "sohanemon/keymap.nvim",
   opts = {
-    default_icon = "",
+    icon = {
+      default = "",
+      group = "",
+    },
   },
 }
 ```

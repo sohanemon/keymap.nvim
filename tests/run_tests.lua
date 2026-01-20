@@ -65,27 +65,53 @@ describe("keymap.config", function()
   local config = require("keymap.config")
 
   before_each(function()
-    config.default_icon = ""
+    config.icon = {
+      default = "",
+      group = ""
+    }
   end)
 
   it("should have correct default values", function()
-    assert(config.default_icon == "", "default_icon should be ")
+    assert(config.icon.default == "", "default icon should be ")
+    assert(config.icon.group == "", "group icon should be ")
   end)
 
-  it("should override default_icon when provided", function()
-    config.setup({ default_icon = "→" })
-    assert(config.default_icon == "→", "default_icon should be →")
+  it("should override icon when provided", function()
+    config.setup({ icon = "→" })
+    assert(config.icon == "→", "icon should be →")
   end)
 
   it("should preserve values when opts is nil", function()
-    config.default_icon = "X"
+    config.icon = "X"
     config.setup(nil)
-    assert(config.default_icon == "X", "default_icon should be X")
+    assert(config.icon == "X", "icon should be X")
   end)
 
   it("should handle partial updates", function()
-    config.setup({ default_icon = "★" })
-    assert(config.default_icon == "★", "default_icon should be ★")
+    config.setup({ icon = "★" })
+    assert(config.icon == "★", "icon should be ★")
+  end)
+
+  it("should get icon for keymap when icon is string", function()
+    config.icon = ""
+    assert(config.get_icon() == "", "should return the icon for keymaps")
+  end)
+
+  it("should get different icons for group and keymap when icon is table", function()
+    config.icon = {
+      default = "",
+      group = "",
+    }
+    assert(config.get_icon() == "", "should return default icon for keymaps")
+    assert(config.get_group_icon() == "", "should return group icon for groups")
+  end)
+
+  it("should fallback to default when group is missing in table", function()
+    config.icon = {
+      default = "",
+    }
+    assert(config.get_icon() == "", "should return default icon for keymaps")
+    assert(config.get_group_icon() == "", "should fallback to default for groups")
   end)
 end)
 
@@ -167,13 +193,15 @@ describe("keymap.add (submodule)", function()
   local config = require("keymap.config")
 
   before_each(function()
-    config.default_icon = ""
+    config.icon = {
+      default = "",
+      group = ""
+    }
 
     _G.vim.api = _G.vim.api or {}
     _G.vim.api.nvim_create_autocmd = function() end
     _G.vim.keymap = _G.vim.keymap or {}
     _G.vim.keymap.set = function() end
-    package.loaded["which-key"] = nil
   end)
 
   it("should delete existing keymap before creating new one", function()
@@ -373,7 +401,7 @@ describe("keymap.add (submodule)", function()
     assert(autocmd_count == 2, "should create autocmd for each buftype")
   end)
 
-  it("should use config.default_icon when icon is not provided", function()
+  it("should use config.icon when icon is not provided", function()
     local wk_called = false
     local wk_icon = nil
 
@@ -394,7 +422,7 @@ describe("keymap.add (submodule)", function()
     })
 
     assert(wk_called == true, "which-key.add should be called")
-    assert(wk_icon == "", "should use default_icon from config")
+    assert(wk_icon == "", "should use default icon from config")
   end)
 
   it("should use custom icon when provided", function()
@@ -572,6 +600,59 @@ describe("keymap.add (submodule)", function()
     assert(keymap_set_called == true, "should call vim.keymap.set")
     assert(keymap_args[3] == nil, "command should be nil")
   end)
+
+  it("should use group icon from config when icon is table", function()
+    local wk_args = nil
+    local config = require("keymap.config")
+
+    config.icon = {
+      default = "",
+      group = "",
+    }
+
+    package.loaded["which-key"] = {
+      add = function(args)
+        wk_args = args[1]
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>g",
+      desc = "Git",
+    })
+
+    assert(wk_args.icon == "", "should use group icon for groups")
+  end)
+
+  it("should use keymap icon from config when icon is table", function()
+    local wk_args = nil
+    local config = require("keymap.config")
+
+    config.icon = {
+      default = "",
+      group = "",
+    }
+
+    package.loaded["which-key"] = {
+      add = function(args)
+        wk_args = args[1]
+      end,
+    }
+
+    _G.vim.keymap = _G.vim.keymap or {}
+    _G.vim.keymap.set = function() end
+
+    add({
+      key = "<leader>f",
+      action = ":Files<CR>",
+      desc = "Files",
+    })
+
+    assert(wk_args.icon == "", "should use keymap icon for keymaps")
+  end)
 end)
 
 -- ============================================
@@ -601,7 +682,9 @@ describe("keymap (main module)", function()
   it("should expose config table", function()
     local keymap = require("keymap")
     assert(type(keymap.config) == "table", "keymap.config should be a table")
-    assert(type(keymap.config.default_icon) == "string", "config should have default_icon")
+    assert(type(keymap.config.icon) == "table", "config should have icon table")
+    assert(keymap.config.icon.default == "", "should have default icon")
+    assert(keymap.config.icon.group == "", "should have group icon")
   end)
 
   it("should expose util table", function()
