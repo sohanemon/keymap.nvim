@@ -44,8 +44,15 @@ require("keymap").setup({
 
 ## Usage
 
+Use either the module pattern or the global `Keymap` table:
+
 ```lua
+-- Module pattern (recommended)
 local keymap = require("keymap")
+keymap.remap({ ... })
+
+-- Global pattern
+Keymap.remap({ ... })
 
 -- Global key mapping (applies everywhere)
 keymap.remap({

@@ -51,6 +51,9 @@ end
 
 setup_test_environment()
 
+-- Load the plugin to set up global Keymap
+dofile("plugin/keymap.lua")
+
 print("========================================")
 print("keymap.nvim - Standalone Test Suite")
 print("========================================")
@@ -314,6 +317,27 @@ describe("keymap.remap", function()
     })
 
     assert(autocmd_created == true, "BufEnter autocmd should be created")
+  end)
+end)
+
+-- ============================================
+-- GLOBAL KEYMAP TESTS
+-- ============================================
+describe("Global Keymap", function()
+  it("should expose Keymap global table", function()
+    assert(_G.Keymap ~= nil, "Keymap should be a global table")
+    assert(type(_G.Keymap.remap) == "function", "Keymap.remap should be a function")
+    assert(type(_G.Keymap.setup) == "function", "Keymap.setup should be a function")
+    assert(type(_G.Keymap.send_key) == "function", "Keymap.send_key should be a function")
+    assert(type(_G.Keymap.delete_keymap) == "function", "Keymap.delete_keymap should be a function")
+  end)
+
+  it("should have same functions as module", function()
+    local keymap = require("keymap")
+    assert(_G.Keymap.remap == keymap.remap, "Keymap.remap should equal require('keymap').remap")
+    assert(_G.Keymap.setup == keymap.setup, "Keymap.setup should equal require('keymap').setup")
+    assert(_G.Keymap.send_key == keymap.send_key, "Keymap.send_key should equal require('keymap').send_key")
+    assert(_G.Keymap.delete_keymap == keymap.delete_keymap, "Keymap.delete_keymap should equal require('keymap').delete_keymap")
   end)
 end)
 
