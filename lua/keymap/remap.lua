@@ -1,0 +1,112 @@
+local util = require("keymap.util")
+local config = require("keymap.config")
+
+local M = {}
+
+---@param opts KeymapOpts
+function M.remap(opts)
+  local key = opts.key
+  local action = opts.action
+  local mode = opts.mode or "n"
+  local desc = opts.desc
+  local remap = opts.remap
+  local buffer = opts.buffer
+  local filetype = opts.filetype
+  local buftype = opts.buftype
+  local icon = opts.icon
+  local vscode_cmd = opts.vscode
+
+  local command = (vim.g.vscode and vscode_cmd) and function()
+    require("vscode").call(vscode_cmd)
+  end or action
+
+  util.delete_keymap(key, mode)
+
+  local function add_keymap(bufnr)
+    local wk_status, wk = pcall(require, "which-key")
+    if wk_status then
+      if command then
+        wk.add({
+          {
+            key,
+            command,
+            desc = desc,
+            mode = mode,
+            remap = remap,
+            buffer = bufnr,
+            icon = icon or config.default_icon,
+          },
+        })
+      else
+        wk.add({
+          {
+            key,
+            group = desc,
+            mode = mode,
+            buffer = bufnr,
+            icon = icon or config.default_icon,
+          },
+        })
+      end
+    elseif config.wk_fallback then
+      if command then
+        vim.keymap.set(mode, key, command, {
+          desc = desc,
+          remap = remap,
+          buffer = bufnr,
+        })
+      else
+        vim.keymap.set(mode, key, action, {
+          desc = desc,
+          buffer = bufnr,
+        })
+      end
+    else
+      vim.keymap.set(mode, key, action or command, {
+        desc = desc,
+        remap = remap,
+        buffer = bufnr,
+      })
+    end
+  end
+
+  if type(filetype) == "string" then
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = filetype,
+      callback = function()
+        add_keymap(true)
+      end,
+    })
+  elseif type(filetype) == "table" then
+    for _, pat in ipairs(filetype) do
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = pat,
+        callback = function()
+          add_keymap(true)
+        end,
+      })
+    end
+  elseif type(buftype) == "string" then
+    vim.api.nvim_create_autocmd("BufEnter", {
+      callback = function()
+        if vim.bo.buftype == buftype then
+          add_keymap(true)
+        end
+      end,
+    })
+  elseif type(buftype) == "table" then
+    for _, bt in ipairs(buftype) do
+      vim.api.nvim_create_autocmd("BufEnter", {
+        callback = function()
+          if vim.bo.buftype == bt then
+            add_keymap(true)
+          end
+        end,
+      })
+    end
+  else
+    add_keymap(buffer)
+  end
+end
+
+return M
