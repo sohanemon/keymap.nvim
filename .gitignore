@@ -1,0 +1,8 @@
+.DS_Store
+*.log
+*.swp
+*.swo
+*.bak
+*.orig
+*.rej
+*.lua.bak

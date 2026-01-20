@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/bsconfig.json",
+  "completion": {
+    "keywordSamples": ["if", "while", "for", "function", "local", "return"],
+    "requireSeparator": "."
+  },
+  "diagnostics": {
+    "globals": ["vim", "require"]
+  },
+  "format": "stylua",
+  "fuzzySearcher": "off",
+  "hint": {
+    "arrayNewIndex": "Off",
+    "parameterName": "None",
+    "parameterType": "None",
+    "semicolon": "None",
+    "untypedArguments": "Hint"
+  },
+  "runtime": {
+    "LuaJIT": false,
+    "version": "Lua 5.1"
+  },
+  "semantic": {
+    "enable": true,
+    "keyword": true,
+    "support": true
+  },
+  "workspace": {
+    "maxPreload": 2000,
+    "preloadFileSize": 1000
+  }
+}
