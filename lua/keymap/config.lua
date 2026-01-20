@@ -1,14 +1,20 @@
-local M = {
-  default_icon = "",
-  wk_fallback = true,
-}
+---@class keymap.Config
+---@field default_icon? string
+---@field wk_fallback? boolean
+local Config = {}
 
-function M.setup(opts)
+Config.default_icon = ""
+Config.wk_fallback = true
+
+---@param opts? keymap.Config
+function Config.setup(opts)
   opts = opts or {}
-  M.default_icon = opts.default_icon or M.default_icon
+  if opts.default_icon ~= nil then
+    Config.default_icon = opts.default_icon
+  end
   if opts.wk_fallback ~= nil then
-    M.wk_fallback = opts.wk_fallback
+    Config.wk_fallback = opts.wk_fallback
   end
 end
 
-return M
+return Config

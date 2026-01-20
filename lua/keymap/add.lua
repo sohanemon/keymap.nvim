@@ -1,10 +1,20 @@
-local util = require("keymap.util")
-local config = require("keymap.config")
+---@class keymap.AddOpts
+---@field key string
+---@field action string|function
+---@field mode? string|string[]
+---@field desc? string
+---@field remap? boolean
+---@field buffer? boolean|number
+---@field filetype? string|string[]
+---@field buftype? string|string[]
+---@field icon? string
+---@field vscode? string
 
 local M = {}
 
----@param opts KeymapOpts
-function M.remap(opts)
+--- Create a key mapping with optional buffer/filetype/buftype scoping.
+---@param opts keymap.AddOpts
+function M.add(opts)
   local key = opts.key
   local action = opts.action
   local mode = opts.mode or "n"
@@ -20,10 +30,11 @@ function M.remap(opts)
     require("vscode").call(vscode_cmd)
   end or action
 
-  util.delete_keymap(key, mode)
+  require("keymap.util").delete(key, mode)
 
   local function add_keymap(bufnr)
     local wk_status, wk = pcall(require, "which-key")
+    local config = require("keymap.config")
     if wk_status then
       if command then
         wk.add({
@@ -109,4 +120,4 @@ function M.remap(opts)
   end
 end
 
-return M
+return M.add
