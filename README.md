@@ -160,9 +160,9 @@ keymap.add({
 ```lua
 keymap.add({
   key = "<leader>rn",
-  action = "editor.action.rename",
+  action = ":lua vim.lsp.buf.rename()", -- Neovim command
+  vscode = "editor.action.rename", -- VSCode command
   desc = "Rename",
-  vscode = "editor.action.rename",
 })
 ```
 
