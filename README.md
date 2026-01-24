@@ -1,5 +1,7 @@
 # keymap.nvim
 
+![assets/cover.webp](assets/cover.webp)
+
 A lightweight Neovim plugin for creating key mappings with buffer, filetype, and buftype scoping.
 
 ## Why keymap.nvim?
