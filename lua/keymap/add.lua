@@ -31,7 +31,9 @@ function M.add(opts)
     require("vscode").call(vscode_cmd)
   end or action
 
-  require("keymap.util").delete(key, mode)
+  if not buffer and not buftype and not filetype then
+    require("keymap.util").delete(key, mode)
+  end
 
   local function add_keymap(bufnr)
     local wk_status, wk = pcall(require, "which-key")
